@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Illuminate\Support\Facades\Response;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

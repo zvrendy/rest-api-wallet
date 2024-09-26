@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid()->primary();
-            $table->integer('total_amount');
+            $table->foreignUuid('user_id')->constrained('users', 'uuid');
+            $table->foreignId('order_status_id')->constrained('order_status', 'id');
+            $table->foreignId('payment_method_id')->constrained('payment_methods', 'id');
+            $table->float('total_amount', 10, 2);
             $table->timestamps();
         });
     }
