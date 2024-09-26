@@ -4,18 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Wallet extends Model
+class PaymentMethod extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $table = 'wallets';
+    protected $table = 'payment_methods';
 
     protected $fillable = [
-        'balance',
-        'pin',
-        'user_id',
-        'card_number',
+        'name',
+        'code',
+        'status',
+        'thumbnail'
     ];
 
     protected $casts = [
