@@ -4,19 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Str;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Tymon\JWTAuth\Contracts\Providers\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Validator;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Models\Wallet;
+use Illuminate\Support\Facades\DB;
+
+
 
 class AuthController extends Controller
 {
     //
 
     public function login(Request $request) {
-        $credentials = request(['email', 'password']);
-
         $validator = Validator::make($request->all(), [
-            'email'     => 'required',
+            'email'     => 'required|email',
             'password'  => 'required'
         ]);
 
@@ -30,7 +34,7 @@ class AuthController extends Controller
         }
 
         $credentials = $request->only('email', 'password');
-        $token = auth()->guard('api')->attempt($credentials);
+        $token = auth('api')->attempt($credentials);
 
         // authentication failed
         if (!$token) {
@@ -53,12 +57,14 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
+        $data = $request->all();
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|min:6|confirmed',
             'phone' => 'required|numeric|unique:users',
-            'role_id' => 'required|integer'
+            'role_id' => 'required|numeric',
+            'pin' => 'required|digits:6',
         ]);
 
         if ($validator->fails()) {
@@ -69,16 +75,42 @@ class AuthController extends Controller
                 ]
             ], 422);
         }
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->messages()], 400);
+        }
+
+        $user = User::where('email', $request->email)->exists();
+
+        if ($user) {
+            return response()->json(['message' => 'Email already taken'], 409);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $profilePicture = null;
+            if ($request->profile_picture) {
+               $profilePicture = uploadBase64Image($request->profile_picture);
+            }
+
+            $ktp = null;
+            if ($request->ktp) {
+                $ktp = uploadBase64Image($request->ktp);
+            }
+
 
         $uuid = Str::uuid();
         $user = User::create([
-            'uuid' => $request->$uuid,
-            'name' => $request->name,
+            'uuid' => $uuid,
             'nim' => $request->nim,
+            'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'phone' => $request->phone,
-            'role_id' => $request->role_id
+            'role_id' => $request->role_id,
+            'profile_picture' => $profilePicture,
+            'ktp' => $ktp,
+            'verified' => ($ktp) ? true : false
         ]);
 
         // success condition
@@ -89,7 +121,7 @@ class AuthController extends Controller
                     'message' => "Success create user."
                 ]
             ], 200);
-        } 
+        }
 
         // false condition
         return response()->json([
@@ -98,6 +130,29 @@ class AuthController extends Controller
                 'message' => "Failed create user, try again."
             ]
         ], 302);
+
+        $cardNumber = $this->generateCardNumber(16);
+
+        Wallet::create([
+            'user_id' => $user->id,
+            'balance' => 0,
+            'pin' => $request->pin,
+            'card_number' => $cardNumber
+        ]);
+
+        DB::commit();
+        $token = JWTAuth::attempt(['email' => $request->email, 'password' => $request->password]);
+
+            $userResponse = getUser($user->id);
+            $userResponse->token = $token;
+            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            $userResponse->token_type = 'bearer';
+
+            return response()->json($userResponse);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
     }
 
     public function myprofile() {
@@ -106,7 +161,7 @@ class AuthController extends Controller
             'error' => false,
             'data' => [
                 'user' => [
-                    'id' => $user->id,
+                    'uuid' => $user->uuid,
                     'nim' => $user->nim,
                     'name' => $user->name,
                     'email' => $user->email,
@@ -118,27 +173,42 @@ class AuthController extends Controller
     }
 
     public function logout() {
-        // auth('api')->invalidate();
         $removeToken = JWTAuth::invalidate(JWTAuth::getToken());
         if ($removeToken) {
             return response()->json([
                 'error' => false,
                 'data' => [
-                    'message' => "Success logout, invalidate the token."
+                    'message' => "Logout success, invalidate the token."
                 ]
             ]);
         }
     }
 
-    public function refresh() {
-        return $this->respondWithToken(auth()->refresh());
+        public function refresh() {
+            return $this->respondWithToken(auth()->refresh());
+        }
+
+        protected function respondWithToken($token) {
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => auth()->factory()->getTTL() * 60
+            ]);
+        }
+
+        private function generateCardNumber($length)
+    {
+        $result = '';
+        for($i = 0; $i < $length; $i++) {
+            $result .= mt_rand(0, 9);
+        }
+
+        $wallet = Wallet::where('card_number', $result)->exists();
+        if ($wallet) {
+            return $this->generateCardNumber($length);
+        }
+        return $result;
     }
 
-    protected function respondWithToken($token) {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
-        ]);
-    }
+
 }

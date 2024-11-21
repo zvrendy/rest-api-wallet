@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\ServicePrice;
 use App\Models\Transaction;
-use DB;
-use Exception;
 use Illuminate\Http\Request;
-use Str;
-use Validator;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Exception;
+use Midtrans;
+
 
 class ServiceController extends Controller
 {
@@ -20,7 +22,7 @@ class ServiceController extends Controller
             'service_id' => 'required|integer',
             'bank' => 'required|in:bni,bca'
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json([
                 'error' => true,
@@ -41,7 +43,7 @@ class ServiceController extends Controller
                 ]
             ], 422);
         }
-        
+
         // get current user
         $user = auth('api')->user();
 
@@ -109,7 +111,7 @@ class ServiceController extends Controller
                     'bank' => $response->va_numbers[0]->bank
                 ]
             ], 201);
-                
+
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([

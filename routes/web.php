@@ -15,7 +15,9 @@ Route::get('/csrftoken', function() {return csrf_token(); });
 Route::post('/user/register', [AuthController::class, 'register'])->name('register');
 Route::post('/user/login', [AuthController::class, 'login'])->name('login');
 
-Route::get('is-email-exist', [UserController::class, 'isEmailExist']);
+Route::post('is-email-exist', [UserController::class, 'isEmailExist']);
+
+
 
 Route::group(['middleware' => ['auth.jwt', 'auth.admin']], function() {
     Route::get('/user', [UserController::class, 'getUsers'])->name('getUsers');
@@ -28,4 +30,10 @@ Route::group(['middleware' => ['auth.jwt']], function() {
     Route::post('/service/buy', [ServiceController::class, 'buyServices'])->name('buyServices');
 
     Route::get('/transaction', [TransactionController::class, 'getAllTransactions'])->name('getAllTransactions');
+
+    Route::get('tips', [TipController::class, 'index']);
+
+    Route::get('users', [UserController::class, 'show']);
+    Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
+    Route::put('users', [UserController::class, 'update']);
 });

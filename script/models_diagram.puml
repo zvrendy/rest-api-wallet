@@ -1,0 +1,87 @@
+@startuml E-Wallet Models Diagram
+
+skinparam classAttributeIconSize 0
+
+class App\Models\PaymentMethod {
+  +id: int
+  +name: string
+  +code: string
+  +thumbnail: string
+  +status: string
+  +deleted_at: Carbon|null
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+}
+
+class App\Models\Role {
+  +id: int
+  +name: string
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+}
+
+class App\Models\Service {
+  +id: int
+  +name: string
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+}
+
+class App\Models\ServicePrice {
+  +id: int
+  +price: int
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+  +role_id: int
+  +service_id: int|null
+}
+
+class App\Models\Tip {
+  +id: int
+  +title: string
+  +url: string
+  +thumbnail: string
+  +deleted_at: string|null
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+}
+
+class App\Models\Transaction {
+  +uuid: string
+  +total_amount: int
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+  +user_id: string
+  +service_id: int
+}
+
+class App\Models\User {
+  +uuid: string
+  +nim: string|null
+  +name: string
+  +email: string
+  +password: string
+  +phone: string
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+  +role_id: int
+}
+
+class App\Models\Wallet {
+  +id: int
+  +balance: float
+  +pin: string|null
+  +user_id: string
+  +card_number: string
+  +created_at: Carbon|null
+  +updated_at: Carbon|null
+}
+
+App\Models\User "1" -- "1" App\Models\Wallet
+App\Models\User "1" -- "1" App\Models\Role
+App\Models\User "1" -- "*" App\Models\Transaction
+App\Models\Transaction "*" -- "1" App\Models\Service
+App\Models\ServicePrice "*" -- "1" App\Models\Service
+App\Models\ServicePrice "*" -- "1" App\Models\Role
+
+@enduml

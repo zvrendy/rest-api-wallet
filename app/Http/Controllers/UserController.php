@@ -32,10 +32,80 @@ class UserController extends Controller
                 ]
             ], 400);
         }
-        $isExist = User::where('email', request()->email)->first();
+        $isExist = User::where('email', request()->email)->exists();
 
         return response()->json([
             'is_email_exist' => $isExist
         ]);
     }
+
+    public function getUserByUsername(Request $request, $username)
+    {
+        $users = User::select('id', 'name', 'username', 'verified', 'profile_picture')
+                    ->where('username', 'LIKE', '%'.$username.'%')
+                    ->where('id', '<>' ,$this->user->id)
+                    ->get();
+
+        $users->map(function ($item) {
+            $item->profile_picture = $item->profile_picture ?
+                url('storage/'.$item->profile_picture) : "";
+
+            return $item;
+        });
+
+        return response()->json($users);
+    }
+
+    public function update(Request $request)
+    {
+
+        try {
+            $user = User::find($this->user->id);
+
+            $data = $request->only('name', 'username', 'ktp', 'username', 'email', 'password');
+
+            if ($request->username != $user->username) {
+                $isExistUsername = User::where('username', $request->username)->exists();
+                if ($isExistUsername) {
+                    return response(['message' => 'Username already taken'], 409);
+                }
+            }
+
+            if ($request->email != $user->email) {
+                $isExistUsername = User::where('email', $request->email)->exists();
+                if ($isExistUsername) {
+                    return response(['message' => 'Email already taken'], 409);
+                }
+            }
+
+            if ($request->password) {
+                $data['password'] = bcrypt($request->password);
+            }
+
+            if ($request->profile_picture) {
+                $profilePicture = uploadBase64Image($request->profile_picture);
+                $data['profile_picture'] = $profilePicture;
+                if ($user->profile_picture) {
+                    Storage::delete('public/'.$user->profile_picture);
+                }
+            }
+
+            if ($request->ktp) {
+                $ktp = uploadBase64Image($request->ktp);
+                $data['ktp'] = $ktp;
+                $data['verified'] = true;
+                if ($user->ktp) {
+                    Storage::delete('public/'.$user->ktp);
+                }
+            }
+
+            $user->update($data);
+
+            return response()->json(['message' => 'Updated']);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+
+    }
+
 }
