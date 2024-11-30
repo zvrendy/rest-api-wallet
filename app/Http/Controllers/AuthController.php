@@ -11,6 +11,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Melihovv\Base64ImageDecoder\Base64ImageDecoder;
 
 
 
@@ -97,6 +99,10 @@ class AuthController extends Controller
             if ($request->ktp) {
                 $ktp = uploadBase64Image($request->ktp);
             }
+            $role_id = null;
+            If($request->role_id){
+                $role_id = $request->role_id;
+                }
 
 
         $uuid = Str::uuid();
@@ -107,7 +113,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'phone' => $request->phone,
-            'role_id' => $request->role_id,
+            'role_id' => $role_id,
             'profile_picture' => $profilePicture,
             'ktp' => $ktp,
             'verified' => ($ktp) ? true : false
@@ -210,5 +216,16 @@ class AuthController extends Controller
         return $result;
     }
 
+    private function uploadBase64Image($base64Image)
+    {
+        $decoder = new Base64ImageDecoder($base64Image, $allowedFormats = ['jpeg', 'png', 'jpg']);
+
+        $decodedContent = $decoder->getDecodedContent();
+        $format = $decoder->getFormat();
+        $image = Str::random(10) . "." . $format;
+        Storage::disk('public')->put($image, $decodedContent);
+
+        return $image;
+    }
 
 }

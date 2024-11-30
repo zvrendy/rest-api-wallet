@@ -22,6 +22,7 @@ return new class extends Migration
             $table->boolean('verified')->nullable();
             $table->string('profile_picture')->nullable();
             $table->string('ktp')->nullable();
+            // $table->unsignedBigInteger('role_id')->nullable();
             $table->timestamps();
         });
 

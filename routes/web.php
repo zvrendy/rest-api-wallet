@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\v1\ServiceController;
+use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TipController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -36,4 +38,6 @@ Route::group(['middleware' => ['auth.jwt']], function() {
     Route::get('users', [UserController::class, 'show']);
     Route::get('users/{username}', [UserController::class, 'getUserByUsername']);
     Route::put('users', [UserController::class, 'update']);
+
+    Route::get('wallets', [WalletController::class, 'index']);
 });

@@ -6,7 +6,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Melihovv\Base64ImageDecoder\Base64ImageDecoder;
 
 class UserController extends Controller
 {
