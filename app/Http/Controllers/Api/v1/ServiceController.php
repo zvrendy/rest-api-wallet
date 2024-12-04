@@ -71,7 +71,6 @@ class ServiceController extends Controller
 
             $customer_details = [
                 'email'            => $user->email,
-                'phone'            => $user->phone,
             ];
 
             $transaction_data = [

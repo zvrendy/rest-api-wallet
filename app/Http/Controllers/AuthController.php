@@ -63,10 +63,10 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed',
-            'phone' => 'required|numeric|unique:users',
+            'password' => 'required|string|min:6',
             'role_id' => 'required|numeric',
             'pin' => 'required|digits:6',
+            "nim" => 'digits:10|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -112,7 +112,6 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'phone' => $request->phone,
             'role_id' => $role_id,
             'profile_picture' => $profilePicture,
             'ktp' => $ktp,
@@ -120,27 +119,27 @@ class AuthController extends Controller
         ]);
 
         // success condition
-        if ($user) {
-            return response()->json([
-                'error' => false,
-                'data' => [
-                    'message' => "Success create user."
-                ]
-            ], 200);
-        }
+        // if ($user) {
+        //     return response()->json([
+        //         'error' => false,
+        //         'data' => [
+        //             'message' => "Success create user."
+        //         ]
+        //     ], 200);
+        // }
 
-        // false condition
-        return response()->json([
-            'error' => true,
-            'data' => [
-                'message' => "Failed create user, try again."
-            ]
-        ], 302);
+        // // false condition
+        // return response()->json([
+        //     'error' => true,
+        //     'data' => [
+        //         'message' => "Failed create user, try again."
+        //     ]
+        // ], 302);
 
         $cardNumber = $this->generateCardNumber(16);
 
         Wallet::create([
-            'user_id' => $user->id,
+            'user_id' => $user->uuid,
             'balance' => 0,
             'pin' => $request->pin,
             'card_number' => $cardNumber
@@ -149,9 +148,9 @@ class AuthController extends Controller
         DB::commit();
         $token = JWTAuth::attempt(['email' => $request->email, 'password' => $request->password]);
 
-            $userResponse = getUser($user->id);
+            $userResponse = getUser($user->uuid);
             $userResponse->token = $token;
-            $userResponse->token_expires_in = auth()->factory()->getTTL() * 60;
+            $userResponse->token_expires_in = JWTAuth::factory()->getTTL() * 60;
             $userResponse->token_type = 'bearer';
 
             return response()->json($userResponse);
@@ -171,7 +170,6 @@ class AuthController extends Controller
                     'nim' => $user->nim,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'phone' => $user->phone,
                     'role' => $user->role->name
                 ]
             ]
@@ -216,16 +214,16 @@ class AuthController extends Controller
         return $result;
     }
 
-    private function uploadBase64Image($base64Image)
-    {
-        $decoder = new Base64ImageDecoder($base64Image, $allowedFormats = ['jpeg', 'png', 'jpg']);
+    // private function uploadBase64Image($base64Image)
+    // {
+    //     $decoder = new Base64ImageDecoder($base64Image, $allowedFormats = ['jpeg', 'png', 'jpg']);
 
-        $decodedContent = $decoder->getDecodedContent();
-        $format = $decoder->getFormat();
-        $image = Str::random(10) . "." . $format;
-        Storage::disk('public')->put($image, $decodedContent);
+    //     $decodedContent = $decoder->getDecodedContent();
+    //     $format = $decoder->getFormat();
+    //     $image = Str::random(10) . "." . $format;
+    //     Storage::disk('public')->put($image, $decodedContent);
 
-        return $image;
-    }
+    //     return $image;
+    // }
 
 }

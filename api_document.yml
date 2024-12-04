@@ -94,8 +94,6 @@ paths:
                                 type: string
                               email:
                                 type: string
-                              phone:
-                                type: string
                               role:
                                 type: string
         '401':
@@ -136,8 +134,6 @@ paths:
                                 name:
                                   type: string
                                 email:
-                                  type: string
-                                phone:
                                   type: string
                                 role:
                                   type: string
@@ -218,7 +214,7 @@ components:
       properties:
         name:
           type: string
-        email: 
+        email:
           type: string
         role:
           type: string
@@ -235,8 +231,6 @@ components:
           type: string
           nullable: true
           description: For UPNVJ academic
-        phone:
-          type: number
         password:
           type: string
           example: "tester123"
@@ -250,7 +244,7 @@ components:
     userLoginForm:
       type: object
       properties:
-        email: 
+        email:
           type: string
         password:
           type: string
@@ -273,9 +267,9 @@ components:
           type: integer
         bank:
           type: string
-                
 
-                
+
+
 
 
 
