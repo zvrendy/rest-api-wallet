@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Melihovv\Base64ImageDecoder\Base64ImageDecoder;
 
 class UserController extends Controller
 {
-    public function getUsers() {
+    public function getUsers()
+    {
         $users = UserResource::collection(User::get());
 
         return response()->json([
@@ -19,7 +21,8 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function isEmailExist(Request $request) {
+    public function isEmailExist(Request $request)
+    {
         $validator = Validator::make(request()->all(), [
             'email' => 'required|email'
         ]);
@@ -42,13 +45,13 @@ class UserController extends Controller
     public function getUserByUsername(Request $request, $username)
     {
         $users = User::select('id', 'name', 'username', 'verified', 'profile_picture')
-                    ->where('username', 'LIKE', '%'.$username.'%')
-                    ->where('id', '<>' ,$this->user->id)
-                    ->get();
+            ->where('username', 'LIKE', '%' . $username . '%')
+            ->where('id', '<>', $this->user->id)
+            ->get();
 
         $users->map(function ($item) {
             $item->profile_picture = $item->profile_picture ?
-                url('storage/'.$item->profile_picture) : "";
+                url('storage/' . $item->profile_picture) : "";
 
             return $item;
         });
@@ -86,7 +89,7 @@ class UserController extends Controller
                 $profilePicture = uploadBase64Image($request->profile_picture);
                 $data['profile_picture'] = $profilePicture;
                 if ($user->profile_picture) {
-                    Storage::delete('public/'.$user->profile_picture);
+                    Storage::delete('public/' . $user->profile_picture);
                 }
             }
 
@@ -95,7 +98,7 @@ class UserController extends Controller
                 $data['ktp'] = $ktp;
                 $data['verified'] = true;
                 if ($user->ktp) {
-                    Storage::delete('public/'.$user->ktp);
+                    Storage::delete('public/' . $user->ktp);
                 }
             }
 
@@ -105,7 +108,5 @@ class UserController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()], 500);
         }
-
     }
-
 }

@@ -23,7 +23,7 @@ function getUser($param)
 
 function pinChecker($pin)
 {
-    $userId = auth()->user()->id;
+    $userId = auth()->user()->uuid;
     $wallet = Wallet::where('user_id', $userId)->first();
 
     if (!$wallet) {
@@ -35,17 +35,15 @@ function pinChecker($pin)
     }
 
     return false;
-
-
 }
 function uploadBase64Image($base64Image)
-    {
-        $decoder = new Base64ImageDecoder($base64Image, $allowedFormats = ['jpeg', 'png', 'jpg']);
+{
+    $decoder = new Base64ImageDecoder($base64Image, $allowedFormats = ['jpeg', 'png', 'jpg']);
 
-        $decodedContent = $decoder->getDecodedContent();
-        $format = $decoder->getFormat();
-        $image = Str::random(10) . '.' . $format;
-        Storage::disk('public')->put($image, $decodedContent);
+    $decodedContent = $decoder->getDecodedContent();
+    $format = $decoder->getFormat();
+    $image = Str::random(10) . '.' . $format;
+    Storage::disk('public')->put($image, $decodedContent);
 
-        return $image;
-    }
+    return $image;
+}

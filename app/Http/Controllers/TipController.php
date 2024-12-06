@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tip;
 
@@ -16,7 +15,7 @@ class TipController extends Controller
 
         $tips->getCollection()->transform(function ($item) {
             $item->thumbnail = $item->thumbnail ?
-                url('storage/'.$item->thumbnail) : "";
+                url('storage/' . $item->thumbnail) : "";
             return $item;
         });
 

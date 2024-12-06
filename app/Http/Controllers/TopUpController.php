@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\TransactionType;
@@ -18,13 +17,13 @@ class TopUpController extends Controller
         $data = $request->only('amount', 'pin', 'payment_method_code');
 
         $validator = Validator::make($data, [
-           'amount' => 'required|integer|min:10000',
-           'pin' => 'required|digits:6',
-           'payment_method_code' => 'required|in:bni_va,bca_va,bri_va'
+            'amount' => 'required|integer|min:10000',
+            'pin' => 'required|digits:6',
+            'payment_method_code' => 'required|in:bni_va,bca_va,bri_va'
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->messages()], 400);
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $pinChecker = pinChecker($request->pin);
@@ -39,13 +38,13 @@ class TopUpController extends Controller
 
         try {
             $transaction = Transaction::create([
-                'user_id' => auth()->user()->id,
+                'user_id' => auth()->user()->uuid,
                 'payment_method_id' => $paymentMethod->id,
                 'transaction_type_id' => $transactionType->id,
                 'amount' => $request->amount,
                 'transaction_code' => strtoupper(Str::random(10)),
-                'description' => 'Top Up via '.$paymentMethod->name,
-                'status' => Transaction::STATUS_PENDING
+                'description' => 'Top Up via ' . $paymentMethod->name,
+                'status' => 'pending'
             ]);
 
             $params = $this->buildMidtransParameter([
@@ -58,7 +57,7 @@ class TopUpController extends Controller
 
             DB::commit();
 
-            return response()->json($midtrans);
+            return response()->json($midtrans, 200);
         } catch (\Throwable $th) {
             DB::rollback();
 
